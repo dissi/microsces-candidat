@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: Candidat Service API
+  description: API pour la gestion des candidats avec pagination, recherche et gestion des fichiers CV.
+  version: 1.2.0
+
+servers:
+  - url: http://localhost:8082
+    description: Serveur local
+
+paths:
+  /candidats:
+    get:
+      summary: Récupère la liste paginée des candidats avec filtres
+      operationId: getCandidats
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/PaginationPage'
+        - $ref: '#/components/parameters/PaginationLimit'
+      responses:
+        '200':
+          description: Liste paginée des candidats récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCandidatResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      summary: Crée un nouveau candidat
+      operationId: createCandidat
+      tags:
+        - Candidats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidatRequest'
+      responses:
+        '201':
+          description: Candidat créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /candidats/{candidatId}:
+    get:
+      summary: Récupère un candidat spécifique
+      operationId: getCandidatById
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/CandidatId'
+      responses:
+        '200':
+          description: Candidat trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatResponse'
+        '404':
+          $ref: '#/components/responses/CandidatNotFound'
+
+    put:
+      summary: Met à jour un candidat existant
+      operationId: updateCandidat
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/CandidatId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidatRequest'
+      responses:
+        '200':
+          description: Candidat mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CandidatNotFound'
+
+    delete:
+      summary: Supprime un candidat
+      operationId: deleteCandidat
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/CandidatId'
+      responses:
+        '204':
+          description: Candidat supprimé avec succès
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CandidatNotFound'
+
+  /candidats/{candidatId}/cv:
+    post:
+      summary: Upload du CV d'un candidat
+      operationId: uploadCv
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/CandidatId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Fichier CV uploadé avec succès
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/CandidatNotFound'
+
+    get:
+      summary: Télécharger le CV d'un candidat
+      operationId: downloadCv
+      tags:
+        - Candidats
+      parameters:
+        - $ref: '#/components/parameters/CandidatId'
+      responses:
+        '200':
+          description: Fichier CV téléchargé avec succès
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/CandidatNotFound'
+
+components:
+  schemas:
+    CandidatRequest:
+      type: object
+      required:
+        - nom
+        - email
+        - telephone
+      properties:
+        nom:
+          type: string
+          example: Robert Darius
+        email:
+          type: string
+          format: email
+          example: darius.robert@robert.com
+        telephone:
+          type: string
+          pattern: "^[0-9]{10}$"
+          example: "0102090809"
+    CandidatResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        nom:
+          type: string
+          example: Robert Darius
+        email:
+          type: string
+          format: email
+          example: darius.robert@robert.com
+        telephone:
+          type: string
+          pattern: "^[0-9]{10}$"
+          example: "0102090809"
+    PageCandidatResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CandidatResponse'
+        totalElements:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 5
+        pageSize:
+          type: integer
+          example: 10
+        currentPage:
+          type: integer
+          example: 1
+
+  parameters:
+    PaginationPage:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+        example: 1
+    PaginationLimit:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 10
+        maximum: 50
+        example: 10
+    SortBy:
+      name: sort
+      in: query
+      schema:
+        type: string
+        example: "nom,asc"
+    CandidatId:
+      name: candidatId
+      in: path
+      schema:
+        type: string
+        format: uuid
+      required: true
+
+  responses:
+    BadRequest:
+      description: Requête invalide
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/CandidatResponse'
+    CandidatNotFound:
+      description: Candidat non trouvé
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/CandidatResponse'
+tags:
+  - name: Candidats
+    description: Gestion des candidats.
