@@ -1,6 +1,9 @@
 package com.example.microsces.candidat.infrastucture.exception;
 
+import com.example.microsces.candidat.domaine.exception.CandidatNotFoundException;
 import com.example.microsces.candidat.domaine.exception.CandidatValidationException;
+import com.example.microsces.candidat.domaine.exception.CvNotFoundException;
+import com.example.microsces.candidat.domaine.exception.CvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -31,6 +34,54 @@ public class GlobalExceptionHandler {
         problemDetail.setTitle("Erreur de validation");
         return problemDetail;
     }
+
+    /**
+     * Gère les exceptions du Cv non trouvé.
+     *
+     * @param ex L'exception du Cv non trouvé capturée
+     * @return Une réponse HTTP avec un message d'erreur et le code approprié sous forme de ProblemDetail
+     */
+    @ExceptionHandler(CandidatNotFoundException.class)
+    public ProblemDetail handleCandidatNotFoundException(CandidatNotFoundException ex) {
+        LOGGER.error("Candidat not found error: {}", ex.getMessage());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Not Found");
+        return problemDetail;
+    }
+
+
+    /**
+     * Gère les exceptions de validation du Cv.
+     *
+     * @param ex L'exception de validation capturée
+     * @return Une réponse HTTP avec un message d'erreur et le code approprié sous forme de ProblemDetail
+     */
+    @ExceptionHandler(CvValidationException.class)
+    public ProblemDetail handleCandidatValidationException(CvValidationException ex) {
+        LOGGER.error("Validation error: {}", ex.getMessage());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Erreur de validation");
+        return problemDetail;
+    }
+
+    /**
+     * Gère les exceptions du Cv non trouvé.
+     *
+     * @param ex L'exception du Cv non trouvé capturée
+     * @return Une réponse HTTP avec un message d'erreur et le code approprié sous forme de ProblemDetail
+     */
+    @ExceptionHandler(CvNotFoundException.class)
+    public ProblemDetail handleCvNotFoundException(CvNotFoundException ex) {
+        LOGGER.error("Cv not found error: {}", ex.getMessage());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problemDetail.setTitle("Not Found");
+        return problemDetail;
+    }
+
+
 
     /**
      * Gère les exceptions génériques non prévues.
